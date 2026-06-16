@@ -11,7 +11,10 @@ load('dirs1024.mat')
 pth = ['MC_results_from_step001', fs];
 
 AS = 0:0.1:0.6;
+
+% volume fraction
 vf = 0.7;
+
 extraD = 150;
 intraD = 250;
 
@@ -20,6 +23,12 @@ SEEDS = 123;
 ODI = 0.12;
 k = 1/tan(pi/2*ODI);
 angle = asin(sqrt(1/(2*k)))/pi*180;
+
+% variables that allow to set intra or extra cellular kurtosis to zero
+% (used for supplementary material S1), for main simulation please maintain
+% these variables to false)
+inside_kurtosis_only = false;
+outside_kurtosis_only = false;
 
 aiii = 0;
 for As = AS
@@ -36,6 +45,11 @@ for As = AS
             0, 1, 0;...
             1, 0, 0];
         
+        if inside_kurtosis_only
+            wt_ex = wt_ex*0;
+        elseif outside_kurtosis_only
+            wt_in = wt_in*0;
+        end
         [dt_in_unit, wt_in_unit] = fun_rotate_tensors_DKI(dt_in, wt_in, Evector);
         [dt_ex_unit, wt_ex_unit] = fun_rotate_tensors_DKI(dt_ex, wt_ex, Evector);
         
@@ -133,16 +147,16 @@ for As = AS
         dt_total = vf * dt_in_total + (1-vf) * dt_ex_total;
         
         DT = [dt_total(1), dt_total(4), dt_total(5);...
-              dt_total(4), dt_total(2), dt_total(6);...
-              dt_total(5), dt_total(6), dt_total(3)];
-
+            dt_total(4), dt_total(2), dt_total(6);...
+            dt_total(5), dt_total(6), dt_total(3)];
+        
         KTi = vf * (mdi/md)^2 * uwt_in + (1-vf) * (mde/md)^2 * uwt_ex;
         fp_both = [fp_all*vf; fp_all*(1-vf)];
-
+        
         dt_all = zeros(3, 3, length(V)*nbins*2);
         dt_all(:, :, 1:(length(V)*nbins)) = dt_in_all;
         dt_all(:, :, (1+length(V)*nbins):(length(V)*nbins*2)) = dt_ex_all;
-
+        
         CT = sim_zt(dt_all, DT, fp_both');
         KTv = Zsymmetric(CT)/(md^2);
         
@@ -152,11 +166,11 @@ for As = AS
         pars(8:22) = KTi+KTv;
         pars(23:43) = CT;
         [ktotal(aiii, siii), kaniso(aiii, siii), kiso(aiii, siii), kintra(aiii, siii), Convert, MDd] = fun_resolve_kurtosis_singlevoxel(pars);
-
+        
         [MD(aiii, siii), AD(aiii, siii), RD(aiii, siii), FA, evec1, evec2, evec3, L2, L3] = dti_metrics(dt_total, 1);
         [MKi(aiii, siii), AKi(aiii, siii), RKi(aiii, siii)] = dki_tensor_metrics(dt_total, KTi, 1);
         [MKv(aiii, siii), AKv(aiii, siii), RKv(aiii, siii)] = dki_tensor_metrics(dt_total, KTv, 1);
-
+        
         
     end
 end
@@ -195,6 +209,11 @@ plot(AS, mean(RKi, 2)./mean(RK, 2), 'color', [45 11 117]/255)
 xlabel('$$A$$', 'Interpreter', 'latex', 'Interpreter','latex', 'fontsize', 10)
 legend({'AKI', 'RKI'}, 'Location','northwest')
 
-save('sim_kurt_vs_as', 'AS',  'RKi', 'AKi', 'RKv', 'AKv', 'RK', 'AK')
-
+if inside_kurtosis_only
+    save('sim_kurt_vs_as_inside', 'AS',  'RKi', 'AKi', 'RKv', 'AKv', 'RK', 'AK')
+elseif outside_kurtosis_only
+    save('sim_kurt_vs_as_outside', 'AS',  'RKi', 'AKi', 'RKv', 'AKv', 'RK', 'AK')
+else
+    save('sim_kurt_vs_as', 'AS',  'RKi', 'AKi', 'RKv', 'AKv', 'RK', 'AK')
+end
 
