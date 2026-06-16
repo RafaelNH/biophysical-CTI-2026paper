@@ -1,0 +1,547 @@
+close all; clear; clc;
+
+addpath(['..', fs, 'DWIu_toolbox_v1.11', fs, 'DDE_toolbox/'])
+
+% Define the dimensions of your original figures (from their 'Position' property)
+fig1_width_cm = 21;
+fig1_height_cm = 16; % From figure1_simplified_v4_A4.m
+fig2_width_cm = 21;
+fig2_height_cm = 6;  % From figure1_simplified_v4_part2_A4.m
+
+% Define the dimensions of the new combined figure
+combined_width_cm = max(fig1_width_cm, fig2_width_cm); % Take the maximum width
+combined_height_cm = fig1_height_cm + fig2_height_cm;   % Sum the heights
+
+% Create the new master figure
+master_fig = figure('color', [1 1 1], 'Units', 'centimeters', ...
+    'Position', [-30 -5 combined_width_cm combined_height_cm]);
+set(master_fig, 'PaperPositionMode', 'auto');
+set(master_fig, 'PaperOrientation', 'portrait');
+set(groot, 'DefaultTextFontName', 'Arial');
+
+% Calculate normalized heights for the two sections within the master figure
+% These are used to scale the 'bottom' and 'height' of subplots from their
+% original figure's normalized coordinates to the new master figure's normalized coordinates.
+fig1_normalized_height_in_master = fig1_height_cm / combined_height_cm;
+fig2_normalized_height_in_master = fig2_height_cm / combined_height_cm;
+
+% Call the functions to plot content onto the master figure
+% They will handle their own subplot positioning relative to the master figure.
+plotFigure1Content(master_fig, fig1_normalized_height_in_master, fig2_normalized_height_in_master);
+plotFigure2Content(master_fig, fig2_normalized_height_in_master);
+
+% Export the combined figure
+print(master_fig, 'figure1_final.pdf', '-dpdf', '-painters');
+print(master_fig, 'figure1_final.eps', '-depsc', '-painters');
+fprintf('Figures saved successfully!\n');
+
+
+function plotFigure1Content(master_fig, fig1_height_normalized_in_master, fig2_height_normalized_in_master)
+% Global plotting parameters
+lw = 1;
+fff = 10;
+fff2 = 10;
+
+% Set the master figure as the current figure for plotting
+figure(master_fig);
+
+% Define the vertical offset for this figure's content within the master figure
+% This pushes the content up to sit on top of where fig2 will be.
+vertical_offset = fig2_height_normalized_in_master;
+
+%% Panel A - DDE profiles
+www = 0.3;
+for si = 1:3
+    
+    subplot_left = 0.1 + (si-1)*www;
+    subplot_bottom = 0.77 * fig1_height_normalized_in_master + vertical_offset;
+    subplot_width = 0.2;
+    subplot_height = 0.2 * fig1_height_normalized_in_master;
+    
+    handle = subplot('position', [subplot_left, subplot_bottom, subplot_width, subplot_height]);
+    bm = 3000;
+    b1 = 2500;
+    b2 = 2500;
+    
+    gm = sqrt(bm);
+    delta = 1.5;
+    Delta = 10;
+    rsamp = 100;
+    if si < 3
+        [grad1, grad2] = dde_profile(b1, b2, delta, Delta, rsamp);
+    else
+        [grad1, grad2] = dde_profile(0.9*b1, 0.1*b1, delta, Delta, rsamp);
+    end
+    plot(1:length(grad2), grad2, 'LineWidth', lw, 'color', 'red')
+    hold on
+    plot(1:length(grad1), grad1, 'LineWidth', lw, 'color', 'blue')
+    
+    arrows = 0.5;
+    y = [-2700 -2700];
+    x = [230 1200];
+    quiver(x(1),y(1),x(2)-x(1),y(2)-y(1),0, 'color', [0 0 0],'LineWidth', lw, 'MaxHeadSize', arrows)
+    quiver(x(2),y(2),x(1)-x(2),y(1)-y(2),0, 'color', [0 0 0],'LineWidth', lw, 'MaxHeadSize', arrows)
+    
+    x = [1230 2200];
+    quiver(x(1),y(1),x(2)-x(1),y(2)-y(1),0, 'color', [0 0 0],'LineWidth', lw, 'MaxHeadSize', arrows)
+    quiver(x(2),y(2),x(1)-x(2),y(1)-y(2),0, 'color', [0 0 0],'LineWidth', lw, 'MaxHeadSize', arrows)
+    
+    x = [2230 3200];
+    quiver(x(1),y(1),x(2)-x(1),y(2)-y(1),0, 'color', [0 0 0],'LineWidth', lw, 'MaxHeadSize', arrows)
+    quiver(x(2),y(2),x(1)-x(2),y(1)-y(2),0, 'color', [0 0 0],'LineWidth', lw, 'MaxHeadSize', arrows)
+    
+    xlim([1, length(grad2)])
+    text(1500, 3600, ['A', num2str(si)], 'fontsize', fff)
+    ylim([-b1*1.2, b1*1.2])
+    axis off
+    
+    txt = '$$\delta$$';
+    text(180, -600, txt, 'Interpreter','latex', 'fontsize', fff)
+    text(2180, -600, txt, 'Interpreter','latex', 'fontsize', fff)
+    text(1180, 400, txt, 'Interpreter','latex', 'fontsize', fff)
+    text(3180, 400, txt, 'Interpreter','latex', 'fontsize', fff)
+    
+    txt = '$$g_1$$';
+    text(-150, 2500, txt, 'Interpreter','latex', 'fontsize', fff)
+    txt = '$$g_2$$';
+    if si < 3
+        text(1850, 2500, txt, 'Interpreter','latex', 'fontsize', fff)
+    else
+        text(1850, 1000, txt, 'Interpreter','latex', 'fontsize', fff)
+    end
+    
+    txt = '$$\Delta$$';
+    text(700, -2200, txt, 'Interpreter','latex', 'fontsize', fff)
+    txt = '$$\tau_m$$';
+    text(1700, -2200, txt, 'Interpreter','latex', 'fontsize', fff)
+    txt = '$$\Delta$$';
+    text(2700, -2200, txt, 'Interpreter','latex', 'fontsize', fff)
+    
+    ylim([-4000, 4000])
+    xlim([-30, 3700])
+    
+    if si==2
+        title('A) Types of DDE experiments for CTI', 'fontsize', fff)
+    end
+end
+
+%% Panel B - Directions
+load('dirs45')
+p = 3;
+dir1 =[];
+dir2 = [];
+angle = 90;
+[d1, d2] = fun_generate_dde_design(V, p, angle/180*pi);
+nd = 45;
+p = 1;
+nv = nd*(p+1);
+
+
+for si = 1:3
+    subplot_left = 0.3 + (si-1)*www;
+    subplot_bottom = 0.8 * fig1_height_normalized_in_master + vertical_offset;
+    subplot_width = 0.1;
+    subplot_height = 0.152 * fig1_height_normalized_in_master;
+
+    handle = subplot('position', [subplot_left, subplot_bottom, subplot_width, subplot_height]);
+    
+    ac = diag(d1*d2');
+    valid_indices = ac<0.1;
+    filtered_d1 = d1(valid_indices, :);
+    filtered_d2 = d2(valid_indices, :);
+    
+    for vi=1:size(filtered_d1,1)
+        if si==1
+            c1=0.6;
+            c2=0.6;
+            v2 = filtered_d1;
+        elseif si== 2
+            c1=1;
+            c2=.2;
+            v2 = filtered_d2;
+        elseif si == 3
+            c1=1;
+            c2=.2;
+            v2 = filtered_d1;
+        end
+        plot3([0, c1*filtered_d1(vi, 1)], [0, c1*filtered_d1(vi, 2)], [0, c1*filtered_d1(vi, 3)], ...
+            'LineWidth', lw, 'color', 'blue')
+        hold on
+        plot3([c1*filtered_d1(vi, 1), c1*filtered_d1(vi, 1)+c2*v2(vi, 1)],...
+            [c1*filtered_d1(vi, 2), c1*filtered_d1(vi, 2)+c2*v2(vi, 2)], ...
+            [c1*filtered_d1(vi, 3), c1*filtered_d1(vi, 3)+c2*v2(vi, 3)],...
+            'LineWidth', lw, 'color', 'red')
+    end
+    view(0, 0)
+    axis equal
+    axis off
+    xlim([-1.5 2.2])
+    ylim([-1.5 2.2])
+    zlim([-1.5 1.2])
+end
+
+
+%% Panel B - Simulations (ODF plot and geometry)
+
+np = 100;
+theta = linspace(0,2*pi,np+1);
+phi = linspace(0,2*pi,np+1);
+[theta, phi] = meshgrid(theta, phi);
+
+% ODF plot
+ODI = 0.12;
+k = 1/tan(pi/2*ODI);
+angle = asin(sqrt(1/(2*k)))/pi*180;
+
+B = Bingham_2D_for_ploting(1, k, k, [0, 1, 0]', [1, 0, 0]', theta, phi);
+[xx, yy, zz] = sph2cart(theta, phi, B);
+
+% Calculate new subplot position relative to the master figure
+% Original: [0.2, 0.04, 0.15, 0.65]
+subplot_left = 0.2;
+subplot_bottom = 0.04 * fig1_height_normalized_in_master + vertical_offset;
+subplot_width = 0.15;
+subplot_height = 0.65 * fig1_height_normalized_in_master;
+
+handle = subplot('position', [subplot_left, subplot_bottom, subplot_width, subplot_height]);
+surf(xx, yy, zz, B, 'EdgeColor', 'none')
+hold on
+view(45,45)
+axis equal
+axis off
+
+text(-0.12, -0.12, 0.1, '$$\odot$$', 'Interpreter','latex', 'fontsize', 20, 'HorizontalAlignment' , 'center')
+text(-0.12, -0.12, 0.1, '$$*$$', 'Interpreter','latex', 'fontsize', 20, 'HorizontalAlignment' , 'center')
+
+x = [-0.2, 0.2];
+y = [-0.2, 0.2];
+z = [0, 0];
+quiver3(x(1),y(1),z(1),x(2)-x(1),y(2)-y(1),z(2)-z(1),0, 'color', [0 0 0],'LineWidth', 2, 'MaxHeadSize', arrows*2)
+z = [-1.2, -1.2];
+quiver3(x(1),y(1),z(1),x(2)-x(1),y(2)-y(1),z(2)-z(1),0, 'color', [0 0 0],'LineWidth', 2, 'MaxHeadSize', arrows*2)
+
+z = [1.2, 1.2];
+quiver3(x(1),y(1),z(1),x(2)-x(1),y(2)-y(1),z(2)-z(1),0, 'color', [0 0 0],'LineWidth', 2, 'MaxHeadSize', arrows*2)
+
+text(0, 0, 1.5, '$$ODF$$', 'Interpreter','latex', 'fontsize', fff, 'HorizontalAlignment' , 'center')
+
+caxis([-1 1])
+xlim([-0.2 0.2])
+ylim([-0.2 0.2])
+zlim([-1.5 1.5])
+
+% Ensure 'parula' is a standard colormap or define 'mycmap' properly if needed
+if ~exist('parula', 'var')
+    temp_fig = figure('Visible', 'off');
+    parula = colormap(temp_fig, 'parula');
+    close(temp_fig);
+end
+
+%% simulation cases (B1-B3)
+for cases = 1:3
+    if cases == 2
+        A = 0.6;
+        zzz= 0:0.1:3;
+        ngrid = 21;
+    else
+        A = 0;
+        zzz= 0:0.2:3;
+        ngrid = 11;
+    end
+    
+    load(['case', num2str(cases)])
+    
+    % Geometry
+    
+    % Temporarily create a dummy axes to get subplot_tight's default position
+    temp_ax = subplot_tight(4, 6, 7+6*(cases-1));
+    original_pos = get(temp_ax, 'Position'); % Get normalized position relative to a standard figure
+    delete(temp_ax); % Delete the dummy axes
+    
+    % Scale and offset the position for the master figure
+    subplot_left = original_pos(1);
+    subplot_bottom = original_pos(2) * fig1_height_normalized_in_master + vertical_offset;
+    subplot_width = original_pos(3);
+    subplot_height = original_pos(4) * fig1_height_normalized_in_master;
+
+    ax=subplot('position', [subplot_left, subplot_bottom, subplot_width, subplot_height]);
+    
+    vf = 0.5;
+    shift = sqrt(2*pi*(0.5*A^2+1)/vf);
+    B = 2*pi/1;
+    r = (1+A*cos(B*(zzz)));
+    rc = (1+A*cos(B*((zzz)-pi/2)));
+    [X,Y,Z] = cylinder(r,ngrid);
+    [Xc,Yc,Zc] = cylinder(rc,ngrid);
+    r = sqrt(X.^2 + Y.^2);
+    rc = sqrt(Xc.^2 + Yc.^2);
+    Z = Z*5.5*3;
+    Zc = Zc*5.5*3;
+    if cases == 3
+        fa = 0.2;
+    else
+        fa = 1;
+    end
+    
+    surf(Xc,Yc,Zc,rc, 'FaceAlpha',fa) %,'EdgeColor', 'none')
+    hold on
+    surf(X-shift/2,Y-shift/2,Z,r, 'FaceAlpha',fa)%,'EdgeColor', 'none')
+    surf(X+shift/2,Y-shift/2,Z,r, 'FaceAlpha',fa)%,'EdgeColor', 'none')
+    surf(X-shift/2,Y+shift/2,Z,r, 'FaceAlpha',fa)%,'EdgeColor', 'none')
+    surf(X+shift/2,Y+shift/2,Z,r, 'FaceAlpha',fa)%,'EdgeColor', 'none')
+    surf(Xc-shift,Yc,Zc,rc, 'FaceAlpha',fa) %,'EdgeColor', 'none')
+    surf(Xc+shift,Yc,Zc,rc, 'FaceAlpha',fa) %,'EdgeColor', 'none')
+    surf(Xc, Yc-shift,Zc,rc, 'FaceAlpha',fa) %,'EdgeColor', 'none')
+    surf(Xc, Yc+shift,Zc,rc, 'FaceAlpha',fa) %,'EdgeColor', 'none')
+    view(30, 30)
+    grid off
+    axis equal
+    caxis([0 2])
+    if cases == 1
+        xlim([-5.5 5.5])
+        ylim([-5.5 5.5])
+        text(-7, -5.5, 10, ['B', num2str(cases)], 'fontsize', fff)
+        title({'B) Simulated Cases'}, 'fontsize', fff2)
+    elseif cases == 2
+        xlim([-5.5 5.5])
+        ylim([-5.5 5.5])
+        text(-7, -5.5, 10, ['B', num2str(cases)], 'fontsize', fff)
+    elseif cases == 3
+        xlim([-5.5 8])
+        ylim([-5.5 5.5])
+        text(-7, -5.5, 10, ['B', num2str(cases)], 'fontsize', fff)
+        x = [3, 8];
+        y = [-5 0];
+        z = [10 9];
+        quiver3(x(1),y(1),z(1),x(2)-x(1),y(2)-y(1),z(2)-z(1),0, 'color', [1 0 0],'LineWidth', 2, 'MaxHeadSize', arrows*2)
+        quiver3(x(2),y(2),z(2),x(1)-x(2),y(1)-y(2),z(1)-z(2),0, 'color', [1 0 0],'LineWidth', 2, 'MaxHeadSize', arrows*2)
+        text(mean(x)+2, -4, mean(z)+3, '$$k$$', 'Interpreter','latex', 'fontsize', fff, 'color', 'red')
+    end
+    axis off
+    
+    
+    %% CTI's mean kurtosis sources
+    % Repeat the subplot_tight position calculation
+    temp_ax = subplot_tight(4, 6, 9+6*(cases-1));
+    original_pos = get(temp_ax, 'Position');
+    delete(temp_ax);
+    
+    subplot_left = original_pos(1);
+    subplot_bottom = original_pos(2) * fig1_height_normalized_in_master + vertical_offset;
+    subplot_width = original_pos(3);
+    subplot_height = original_pos(4) * fig1_height_normalized_in_master;
+    
+    hAxes = subplot('position', [subplot_left, subplot_bottom, subplot_width, subplot_height]);
+    
+    bar(1, ktotal, 'FaceColor',[30 30 30]/255)
+    hold on
+    bar(2, kaniso, 'FaceColor',[190 100 58]/255)
+    bar(3, kiso, 'FaceColor',[233 184 98]/255)
+    bar(4, kintra, 'FaceColor',[98 184 233]/255) %[68 154 217]/255
+    set(gca,'XTick',[0.8, 1.9, 3.1, 4.2]);
+    if cases == 3
+        xticklabels({'$$\overline{K}_t$$', '$$\overline{K}_{ani}$$',...
+            '$$\overline{K}_{iso}$$', '$$\overline{K}_{\mu}$$'})
+    else
+        xticklabels({' ', ' ', ' ',' '})
+    end
+    xtickangle(hAxes, 0);
+    hAxes.TickLabelInterpreter = 'latex';
+    hAxes.FontSize = fff;
+    ylim([0, 2])
+    xlim([0.5, 4.5])
+    if cases == 1
+        title({'C) Previous CTI'}, 'fontsize', fff2)
+    end
+    text(3.6, 1.8, ['C', num2str(cases)], 'fontsize', fff)
+    
+    %% total kurtosis
+    % Repeat the subplot_tight position calculation
+    temp_ax = subplot_tight(4, 6, 10+6*(cases-1));
+    original_pos = get(temp_ax, 'Position');
+    delete(temp_ax);
+    
+    subplot_left = original_pos(1);
+    subplot_bottom = original_pos(2) * fig1_height_normalized_in_master + vertical_offset;
+    subplot_width = original_pos(3);
+    subplot_height = original_pos(4) * fig1_height_normalized_in_master;
+    
+    ax=subplot('position', [subplot_left, subplot_bottom, subplot_width, subplot_height]);
+    
+    r_kurt = DirectionalKurt_2D(dt_total, KTi+KTv, theta, phi);
+    [xx, yy, zz]=sph2cart(theta, phi, r_kurt);
+    surf(xx, yy, zz, r_kurt, 'EdgeColor', 'none')
+    view(30,30)
+    grid off
+    axis equal
+    caxis([-3.2 3.2])
+    xlim([-3.2 3.2])
+    ylim([-3.2 3.2])
+    zlim([-3.2 3.2])
+    if cases == 1
+        title({'D) Total-Kurtosis';'(DKI)'}, 'fontsize', fff2)
+        text(1, 0, 3.2, '$$K_t(n)$$', 'Interpreter','latex', 'fontsize', fff2)
+    end
+    text(-2, -3, 3.4, ['D', num2str(cases)], 'fontsize', fff)
+    
+    % variance kurtosis
+    % Repeat the subplot_tight position calculation
+    temp_ax = subplot_tight(4, 6, 11+6*(cases-1));
+    original_pos = get(temp_ax, 'Position');
+    delete(temp_ax);
+    
+    subplot_left = original_pos(1);
+    subplot_bottom = original_pos(2) * fig1_height_normalized_in_master + vertical_offset;
+    subplot_width = original_pos(3);
+    subplot_height = original_pos(4) * fig1_height_normalized_in_master;
+    
+    ax=subplot('position', [subplot_left, subplot_bottom, subplot_width, subplot_height]);
+    
+    r_kurt = DirectionalKurt_2D(dt_total, KTv, theta, phi);
+    [xx, yy, zz]=sph2cart(theta, phi, r_kurt);
+    surf(xx, yy, zz, r_kurt, 'EdgeColor', 'none')
+    view(30, 30)
+    grid off
+    axis equal
+    caxis([-3.2 3.2])
+    xlim([-3.2 3.2])
+    ylim([-3.2 3.2])
+    zlim([-3.2 3.2])
+    if cases == 1
+        title({'E) Var-Kurtosis';'(new CTI)'}, 'fontsize', fff2)
+        text(1, 0, 3.2, '$$K_v(n)$$', 'Interpreter','latex', 'fontsize', fff2)
+    end
+    text(-2, -3, 3.4, ['E', num2str(cases)], 'fontsize', fff)
+    
+    % micro kurtosis
+    % Repeat the subplot_tight position calculation
+    temp_ax = subplot_tight(4, 6, 12+6*(cases-1));
+    original_pos = get(temp_ax, 'Position');
+    delete(temp_ax);
+    
+    subplot_left = original_pos(1);
+    subplot_bottom = original_pos(2) * fig1_height_normalized_in_master + vertical_offset;
+    subplot_width = original_pos(3);
+    subplot_height = original_pos(4) * fig1_height_normalized_in_master;
+    
+    ax=subplot('position', [subplot_left, subplot_bottom, subplot_width, subplot_height]);
+    
+    r_kurt = DirectionalKurt_2D(dt_total, KTi, theta, phi); 
+    [xx, yy, zz]=sph2cart(theta, phi, r_kurt);
+    surf(xx, yy, zz, r_kurt, 'EdgeColor', 'none')
+    view(30,30)
+    grid off
+    axis equal
+    caxis([-1 1])
+    xlim([-1 1])
+    ylim([-1 1])
+    zlim([-1 1])
+    if cases == 1
+        title({'F) Micro-Kurtosis';'(new CTI)'}, 'fontsize', fff2)
+        text(1/3, 0, 3.2/3, '$$K_\mu(n)$$', 'Interpreter','latex', 'fontsize', fff2)
+    end
+    text(-2/3, -3/3, 3.4/3, ['F', num2str(cases)], 'fontsize', fff)
+end
+end
+
+function plotFigure2Content(master_fig,  fig2_height_normalized_in_master)
+
+lw = 1.5;
+fff = 10;
+fff2 = 10;
+
+figure(master_fig);
+
+
+www = 0.19;
+for si = 1:5
+
+    
+    subplot_left = 0.04 + (si-1)*www;
+    subplot_bottom = 0.15 * fig2_height_normalized_in_master;
+    subplot_width = 0.16;
+    subplot_height = 0.7 * fig2_height_normalized_in_master;
+    
+    handle = subplot('position', [subplot_left, subplot_bottom, subplot_width, subplot_height]);
+    
+     if si == 1
+        load('sim_kurt_vs_as', 'AS',  'RKi', 'AKi', 'RKv', 'AKv', 'RK', 'AK')
+        plot(AS/sqrt(2), RKv,'LineWidth', lw, 'color', [117 11 45]/255)
+        hold on
+        plot(AS/sqrt(2), AKv,'LineWidth', lw, 'color', [217 154 68]/255)
+        xticks([0:0.1:0.4])
+        yticks([0:1:3])
+        xlim([0, AS(end)/sqrt(2)])
+        ylim([0, 3.4])
+        legend('$$K_{v}^\bot$$', '$$K_{v}^\parallel$$', ...
+            'Interpreter','latex', 'fontsize', fff, 'location', 'east')
+        title({'G) Sensitivity to SD(r)/r_0'}, 'fontsize', fff2, 'HorizontalAlignment', 'left')
+        xlabel('$SD(r)/r_0$', 'Interpreter','latex', 'fontsize', fff)
+        text(0.05, 3.2, 'G1', 'fontsize', fff)
+        
+    elseif si==2
+        plot(AS/sqrt(2), RKi,'LineWidth', lw, 'color', [45 11 117]/255)
+        hold on
+        plot(AS/sqrt(2), AKi,'LineWidth', lw, 'color', [68 154 217]/255)
+        xticks([0:0.1:0.4])
+        yticks([0:0.1:0.5])
+        xlim([0, AS(end)/sqrt(2)])
+        ylim([0, 0.6])
+        legend('$$K_{\mu}^\bot$$', '$$K_{\mu}^\parallel$$', ...
+            'Interpreter','latex', 'fontsize', fff, 'location', 'northeast')
+        xlabel('$SD(r)/r_0$', 'Interpreter','latex', 'fontsize', fff)
+        text(0.05, 0.56, 'G2', 'fontsize', fff)
+    elseif si==3
+        load('sim_kurt_vs_r', 'r',  'RKi', 'AKi', 'RKv', 'AKv', 'RK', 'AK')
+        plot(r*10, RKv,'LineWidth', lw, 'color', [117 11 45]/255)
+        hold on
+        plot(r*10, AKv,'LineWidth', lw, 'color', [217 154 68]/255)
+        plot(r*10, RK,'LineWidth', lw, 'color', 'black', 'Linestyle', ':')
+        title('H) Sensitivity to Exchange', 'fontsize', fff2, 'HorizontalAlignment', 'left')
+        xticks([0:1:3])
+        yticks([0:0.5:2.5])
+        xlim([0, 3.2])
+        ylim([0, 2.7])
+        xlabel('$k \Delta$', 'Interpreter','latex', 'fontsize', fff)
+        legend('$$K_{v}^\bot$$', '$$K_{v}^\parallel$$', ...
+            '$$K_{t}^\bot$$', ...
+            'Interpreter','latex', 'fontsize', fff)
+        text(0.05, 2.5, 'H1', 'fontsize', fff)
+    elseif si==4
+        load('sim_kurt_vs_r', 'r',  'RKi', 'AKi', 'RKv', 'AKv', 'RK', 'AK')
+        %plot(r, RKv,'LineWidth', lw, 'color', [117 11 45]/255)
+        %hold on
+        %plot(r, AKv,'LineWidth', lw, 'color', [217 154 68]/255)
+        plot(r*10, RKi,'LineWidth', lw, 'color', [45 11 117]/255)
+        hold on
+        plot(r*10, AKi,'LineWidth', lw, 'color', [68 154 217]/255)
+        plot(r*10, RK,'LineWidth', lw, 'color', 'black', 'Linestyle', ':')
+        xticks([0:1:3])
+        yticks([0:0.5:2.5])
+        xlim([0, 3.2])
+        ylim([0, 2.7])
+        xlabel('$k \Delta$', 'Interpreter','latex', 'fontsize', fff)
+        legend('$$K_{\mu}^\bot$$', '$$K_{\mu}^\parallel$$', ...
+            '$$K_{t}^\bot$$', ...
+            'Interpreter','latex', 'fontsize', fff)
+        text(0.05, 2.5, 'H2', 'fontsize', fff)
+        
+    else
+        plot(r*10, RKv./RK,'LineWidth', lw, 'color', [117 11 45]/255)
+        hold on
+        plot(r*10, AKv./AK,'LineWidth', lw, 'color', [217 154 68]/255, 'Linestyle', ':')
+        plot(r*10, RKi./RK,'LineWidth', lw, 'color', [45 11 117]/255)
+        plot(r*10, AKi./AK,'LineWidth', lw, 'color', [68 154 217]/255, 'Linestyle', ':')
+        xticks([0:1:3])
+        yticks([0:0.2:1])
+        xlim([0, 3.2])
+        ylim([0, 1.1])
+        xlabel('$k \Delta$', 'Interpreter','latex', 'fontsize', fff)
+        legend('$$K_{v}^\bot/K_t^\bot$$', '$$K_{v}^\parallel/K_t^\parallel$$', ...
+            '$$K_{\mu}^\bot/K_t^\bot$$', '$$K_{\mu}^\parallel/K_t^\parallel$$', ...
+            'Interpreter','latex', 'fontsize', fff, 'location', 'east')
+        text(0.05, 1, 'H3', 'fontsize', fff)
+    end
+end
+end
+

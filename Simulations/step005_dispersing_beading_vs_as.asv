@@ -1,0 +1,210 @@
+%close all
+clear all
+clc
+
+fs = filesep;
+addpath(['..', fs, 'DWIu_toolbox_v1.11', fs, 'DKI_toolbox/'])
+addpath(['..', fs, 'DWIu_toolbox_v1.11', fs, 'DDE_toolbox/'])
+addpath(['..', fs, 'DWIu_toolbox_v1.11', fs, 'Spherical_functions_and_directions/'])
+load('dirs1024.mat')
+
+pth = ['MC_results_from_step001', fs];
+
+AS = 0:0.1:0.6;
+vf = 0.7;
+extraD = 150;
+intraD = 250;
+
+SEEDS = 123;
+
+ODI = 0.12;
+k = 1/tan(pi/2*ODI);
+angle = asin(sqrt(1/(2*k)))/pi*180;
+
+aiii = 0;
+for As = AS
+    aiii = aiii+1;
+    as = As*100;
+    siii = 0;
+    for seed = SEEDS
+        siii = siii + 1;
+        %vf = 0.7;
+        load([pth,'tensors_as',num2str(as),'_intraD',num2str(intraD),'_seed',(num2str(seed))]);
+        load([pth,'tensors_as',num2str(as),'_f',num2str(vf*100),'_extraD',num2str(extraD),'_seed',num2str(seed)], 'wt_ex', 'dt_ex');
+        % Change x axis to y axis of a single replica
+        Evector = [0, 0, 1;...
+            0, 1, 0;...
+            1, 0, 0];
+        
+        [dt_in_unit, wt_in_unit] = fun_rotate_tensors_DKI(dt_in, wt_in, Evector);
+        [dt_ex_unit, wt_ex_unit] = fun_rotate_tensors_DKI(dt_ex, wt_ex, Evector);
+        %dt_ex_unit = [1, 0.5, 0.5, 0, 0, 0];
+        %wt_in_unit = wt_in_unit * 0;
+        
+        %vf = 0.7;
+        
+        mdi = mean(dt_in_unit(1:3));
+        mde = mean(dt_ex_unit(1:3));
+        md = vf * mdi + (1-vf) * mde;
+        
+        % Add dispersion
+        V2 = V;
+        V3 = V;
+        
+        fp = bingham(V, 1, k, k, [0, 1, 0]', [0, 0, 1]');
+        
+        for vi = 1:size(V, 1)
+            Xa = V(vi, :);
+            tang = 2*pi*rand();
+            pang = acos(1 - 2*rand());
+            Xri = sin(pang) * cos(tang);
+            Xrj = sin(pang) * sin(tang);
+            Xrk = cos(pang);
+            
+            while abs(Xa(1) - Xri) < 0.05
+                tang = 2*pi*rand();
+                pang = acos(1 - 2*rand());
+                Xri = sin(pang) * cos(tang);
+                Xrj = sin(pang) * sin(tang);
+                Xrk = cos(pang);
+            end
+            Xr = [Xri, Xrj, Xrk];
+            
+            Xb=cross(Xa,Xr);
+            Xb=Xb/norm(Xb);
+            Xc=cross(Xa,Xb);
+            Xc=Xc/norm(Xc);
+            
+            V2(vi, :) = Xb;
+            V3(vi, :) = Xc;
+            
+        end
+        
+        nbins = 5;
+        fp = fp/(sum(fp)*nbins);
+        dt_in_all = zeros(3, 3, length(V)*nbins);
+        dt_ex_all = zeros(3, 3, length(V)*nbins);
+        fp_all = zeros(length(V)*nbins, 1);
+        
+        uwt_in = 0;
+        uwt_ex = 0;
+        dt_in_total = 0;
+        dt_ex_total = 0;
+        ai = 0;
+        for bi = 1:nbins
+            for vi = 1:size(V, 1)
+                Xa = V(vi, :);
+                Xb = V2(vi, :);
+                Xc = V3(vi, :);
+                
+                Evector=[Xa',Xb',Xc'];
+                
+                [dt_in_rep, wt_in_rep] = fun_rotate_tensors_DKI(dt_in_unit, wt_in_unit, Evector);
+                [dt_ex_rep, wt_ex_rep] = fun_rotate_tensors_DKI(dt_ex_unit, wt_ex_unit, Evector);
+                
+                uwt_in = uwt_in + fp(vi) * wt_in_rep; % since md is only different between intra and extra we can ignore the md correction factor
+                uwt_ex = uwt_ex + fp(vi) * wt_ex_rep;
+                dt_in_total = dt_in_total + fp(vi) * dt_in_rep;
+                dt_ex_total = dt_ex_total + fp(vi) * dt_ex_rep;
+                
+                ai = ai + 1;
+                dt_in_all(1, 1, ai) = dt_in_rep(1);
+                dt_in_all(1, 2, ai) = dt_in_rep(4);
+                dt_in_all(1, 3, ai) = dt_in_rep(5);
+                dt_in_all(2, 1, ai) = dt_in_rep(4);
+                dt_in_all(2, 2, ai) = dt_in_rep(2);
+                dt_in_all(2, 3, ai) = dt_in_rep(6);
+                dt_in_all(3, 1, ai) = dt_in_rep(5);
+                dt_in_all(3, 2, ai) = dt_in_rep(6);
+                dt_in_all(3, 3, ai) = dt_in_rep(3);
+                
+                dt_ex_all(1, 1, ai) = dt_ex_rep(1);
+                dt_ex_all(1, 2, ai) = dt_ex_rep(4);
+                dt_ex_all(1, 3, ai) = dt_ex_rep(5);
+                dt_ex_all(2, 1, ai) = dt_ex_rep(4);
+                dt_ex_all(2, 2, ai) = dt_ex_rep(2);
+                dt_ex_all(2, 3, ai) = dt_ex_rep(6);
+                dt_ex_all(3, 1, ai) = dt_ex_rep(5);
+                dt_ex_all(3, 2, ai) = dt_ex_rep(6);
+                dt_ex_all(3, 3, ai) = dt_ex_rep(3);
+                fp_all(ai) = fp(vi);
+            end
+            disp(bi)
+        end
+        
+        dt_total = vf * dt_in_total + (1-vf) * dt_ex_total;
+        
+        DT = [dt_total(1), dt_total(4), dt_total(5);...
+              dt_total(4), dt_total(2), dt_total(6);...
+              dt_total(5), dt_total(6), dt_total(3)];
+
+        KTi = vf * (mdi/md)^2 * uwt_in + (1-vf) * (mde/md)^2 * uwt_ex;
+        fp_both = [fp_all*vf; fp_all*(1-vf)];
+
+        dt_all = zeros(3, 3, length(V)*nbins*2);
+        dt_all(:, :, 1:(length(V)*nbins)) = dt_in_all;
+        dt_all(:, :, (1+length(V)*nbins):(length(V)*nbins*2)) = dt_ex_all;
+
+        CT = sim_zt(dt_all, DT, fp_both');
+        KTv = Zsymmetric(CT)/(md^2);
+        
+        %% CTI metrics
+        pars(1) = 1;
+        pars(2:7) = dt_total;
+        pars(8:22) = KTi+KTv;
+        pars(23:43) = CT;
+        [ktotal(aiii, siii), kaniso(aiii, siii), kiso(aiii, siii), kintra(aiii, siii), Convert, MDd] = fun_resolve_kurtosis_singlevoxel(pars);
+
+        [MD(aiii, siii), AD(aiii, siii), RD(aiii, siii), FA, evec1, evec2, evec3, L2, L3] = dti_metrics(dt_total, 1);
+        [MKi(aiii, siii), AKi(aiii, siii), RKi(aiii, siii)] = dki_tensor_metrics(dt_total, KTi, 1);
+        [MKv(aiii, siii), AKv(aiii, siii), RKv(aiii, siii)] = dki_tensor_metrics(dt_total, KTv, 1);
+
+        
+    end
+end
+
+
+figure('color', [1 1 1], 'position', [-0.3333 455.0000 971.3333 250.6667])
+subplot(1, 5, 1)
+plot(AS, ktotal, 'b')
+hold on
+plot(AS, kaniso, 'r')
+plot(AS, kiso, 'g')
+plot(AS, kintra, 'cyan')
+%xlim([0.05 0.])
+xlabel('$$A$$', 'Interpreter', 'latex', 'Interpreter','latex', 'fontsize', 10)
+legend({'Ktotal', 'Kaniso', 'Kiso', 'Kmicro'}, 'Location','northwest')
+%ylim([0 3])
+
+
+AK = AKi + AKv;
+RK = RKi + RKv;
+
+subplot(1, 5, 2)
+plot(AS, mean(AKi, 2), 'color', [68 154 217]/255)
+hold on
+plot(AS, mean(RKi, 2), 'color', [45 11 117]/255)
+plot(AS, mean(AKv, 2), 'color', [217 154 68]/255)
+plot(AS, mean(RKv, 2), 'color', [117 11 45]/255)
+plot(AS, mean(AK, 2), '.')
+plot(AS, mean(RK, 2), '.')
+%xlim([0.05 0.])
+xlabel('$$A$$', 'Interpreter', 'latex', 'Interpreter','latex', 'fontsize', 10)
+legend({'AKI', 'RKI', 'AKv', 'RKv', 'AK', 'RK'}, 'Location','northwest')
+%ylim([0 3])
+
+
+subplot(1, 5, 3)
+plot(AS, mean(AKi, 2)./mean(AK, 2), 'color', [68 154 217]/255)
+hold on
+plot(AS, mean(RKi, 2)./mean(RK, 2), 'color', [45 11 117]/255)
+%plot(AS, mean(AKi, 2), 'color', [217 154 68]/255)
+%plot(AS, mean(AKi, 2), 'color', [117 11 45]/255)
+%xlim([0.05 0.])
+xlabel('$$A$$', 'Interpreter', 'latex', 'Interpreter','latex', 'fontsize', 10)
+legend({'AKI', 'RKI'}, 'Location','northwest')
+%ylim([0 3])
+
+save('sim_kurt_vs_as', 'AS',  'RKi', 'AKi', 'RKv', 'AKv', 'RK', 'AK')
+
+
