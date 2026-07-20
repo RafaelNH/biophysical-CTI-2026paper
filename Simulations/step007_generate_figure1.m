@@ -2,8 +2,10 @@ close all; clear; clc;
 
 fs = filesep;
 addpath(['..', fs, 'DWIu_toolbox_v1.11', fs, 'DDE_toolbox/'])
+addpath(['..', fs, 'DWIu_toolbox_v1.11', fs, 'DKI_toolbox/'])
+addpath(['..', fs, 'DWIu_toolbox_v1.11', fs, 'Spherical_functions_and_directions/'])
 
-% Define the dimensions of your original figures (from their 'Position' property)
+% Define the dimensions of your original figures
 fig1_width_cm = 21;
 fig1_height_cm = 16; % From figure1_simplified_v4_A4.m
 fig2_width_cm = 21;
@@ -210,6 +212,9 @@ hold on
 view(45,45)
 axis equal
 axis off
+camlight   
+lighting gouraud
+
 
 text(-0.12, -0.12, 0.1, '$$\odot$$', 'Interpreter','latex', 'fontsize', 20, 'HorizontalAlignment' , 'center')
 text(-0.12, -0.12, 0.1, '$$*$$', 'Interpreter','latex', 'fontsize', 20, 'HorizontalAlignment' , 'center')
@@ -225,7 +230,7 @@ z = [1.2, 1.2];
 quiver3(x(1),y(1),z(1),x(2)-x(1),y(2)-y(1),z(2)-z(1),0, 'color', [0 0 0],'LineWidth', 2, 'MaxHeadSize', arrows*2)
 
 text(0, 0, 1.5, '$$ODF$$', 'Interpreter','latex', 'fontsize', fff, 'HorizontalAlignment' , 'center')
-
+text(-0.6, 0, 1.1, 'B4', 'fontsize', fff)
 caxis([-1 1])
 xlim([-0.2 0.2])
 ylim([-0.2 0.2])
@@ -373,6 +378,8 @@ for cases = 1:3
     [xx, yy, zz]=sph2cart(theta, phi, r_kurt);
     surf(xx, yy, zz, r_kurt, 'EdgeColor', 'none')
     view(30,30)
+        camlight   
+lighting gouraud
     grid off
     axis equal
     caxis([-3.2 3.2])
@@ -402,6 +409,8 @@ for cases = 1:3
     [xx, yy, zz]=sph2cart(theta, phi, r_kurt);
     surf(xx, yy, zz, r_kurt, 'EdgeColor', 'none')
     view(30, 30)
+        camlight   
+lighting gouraud
     grid off
     axis equal
     caxis([-3.2 3.2])
@@ -433,6 +442,8 @@ for cases = 1:3
     view(30,30)
     grid off
     axis equal
+    camlight   
+lighting gouraud
     caxis([-1 1])
     xlim([-1 1])
     ylim([-1 1])
