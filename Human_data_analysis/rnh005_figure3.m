@@ -1,0 +1,296 @@
+clear all
+close all
+clc
+
+fs = filesep;
+addpath(['..',fs,'NIFTI_toolbox'])
+
+load_templated
+
+sss1 = 1;
+sss2 = 1.5;
+sss3 = 0.5;
+
+SSS1 = [0 sss1];
+SSS2 = [0 sss2];
+SSS3 = [0 sss3];
+SSS4 = [0 2];
+
+mycmap = turbo(1000);
+fff = 10;
+fff2 = 10;
+
+
+fig = figure('color', [1 1 1], 'Units', 'centimeters', ...
+    'Position', [-30 -5 21 23]);
+set(fig, 'PaperPositionMode', 'auto');
+set(fig, 'PaperOrientation', 'portrait');
+set(groot, 'DefaultTextFontName', 'Arial');
+
+slice=41;
+
+ax = subplot_tight(5, 6, 1);
+%imagesc(squeeze(FA(:, end:-1:1, slice))', SSS1); axis image; axis off;
+%title('A1) $$FA$$', 'Interpreter','latex', 'fontsize', fff)
+imagesc(squeeze(MD(:, end:-1:1, slice))', SSS4); axis image; axis off;
+title('A1) $$\overline{D} ({\mu}m^2/ms)$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 2];
+
+ax = subplot_tight(5, 6, 2);
+imagesc(squeeze(RD(:, end:-1:1, slice))', SSS4); axis image; axis off;
+title({'\textbf{A) CTI maps}','A2) $$D^\bot({\mu}m^2/ms)$$'}, 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 2];
+
+ax = subplot_tight(5, 6, 3);
+imagesc(squeeze(AD(:, end:-1:1, slice))', SSS4); axis image; axis off;
+title('A3) $$D^\parallel ({\mu}m^2/ms)$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 2];
+
+ax = subplot_tight(5, 6, 7);
+imagesc(squeeze(MK(:, end:-1:1, slice))', SSS2); axis image; axis off;
+title('A4) $$\overline{K}_t$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 1.5];
+
+ax = subplot_tight(5, 6, 8);
+imagesc(squeeze(RK(:, end:-1:1, slice))', SSS2); axis image; axis off;
+title('A5) $$K_t^\bot$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 1.5];
+
+ax = subplot_tight(5, 6, 9);
+imagesc(squeeze(AK(:, end:-1:1, slice))', SSS2); axis image; axis off;
+title('A6) $$K_t^\parallel$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 1.5];
+
+ax = subplot_tight(5, 6, 13);
+imagesc(squeeze(MKv(:, end:-1:1, slice))', SSS2); axis image; axis off;
+title('A7) $$\overline{K}_v$$', 'Interpreter','latex', 'fontsize', fff)
+colormap(mycmap)
+colormap_set
+cb.Ticks = [0 1.5];
+
+ax = subplot_tight(5, 6, 14);
+imagesc(squeeze(RKv(:, end:-1:1, slice))', SSS2); axis image; axis off;
+title('A8) $$K_v^\bot$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 1.5];
+
+ax = subplot_tight(5, 6, 15);
+imagesc(squeeze(AKv(:, end:-1:1, slice))', SSS2); axis image; axis off;
+title('A9) $$K_v^\parallel$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 1.5];
+
+ax = subplot_tight(5, 6, 19);
+imagesc(squeeze(MKi(:, end:-1:1, slice))', SSS3); axis image; axis off;
+title('A10) $$\overline{K}_{\mu}$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 0.5];
+
+ax = subplot_tight(5, 6, 20);
+imagesc(squeeze(RKi(:, end:-1:1, slice))', SSS3); axis image; axis off;
+title('A11) $$K_{\mu}^\bot$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 0.5];
+
+ax = subplot_tight(5, 6, 21);
+imagesc(squeeze(AKi(:, end:-1:1, slice))', SSS3); axis image; axis off;
+title('A12) $$K_{\mu}^\parallel$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 0.5];
+
+ax = subplot_tight(5, 6, 25);
+imagesc(squeeze(FA(:, end:-1:1, slice))', SSS1); axis image; axis off;
+title('A13) $$FA$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 1];
+
+ax = subplot_tight(5, 6, 26);
+imagesc(squeeze(uFA(:, end:-1:1, slice))', SSS1); axis image; axis off;
+title('A14) $${\mu}FA$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 1];
+
+ax = subplot_tight(5, 6, 27);
+imagesc(squeeze(OP(:, end:-1:1, slice))', SSS1); axis image; axis off;
+title('A15) $$OP$$', 'Interpreter','latex', 'fontsize', fff)
+colormap_set
+cb.Ticks = [0 1];
+
+%%
+load('roi_analysis2')
+x = 1/(3*c+6);
+
+subplot_tight(5, 2, 2)
+bar((1:Nroi)-xs, RKv_wm_temp, c*x, 'FaceColor',[117 11 45]/255)
+hold on
+bar((1:Nroi)+xs, AKv_wm_temp, c*x, 'FaceColor',[217 154 68]/255)
+plot(sub_mat(:)-xs, RKv_wm_mat(:), '.black')
+plot(sub_mat(:)+xs, AKv_wm_mat(:), '.black')
+xlim([0.5, Nroi+0.5])
+ylim([0, 4])
+yticks(0:1:3)
+set(gca,'XTick',[],'YTick',0:1:4, 'YAxisLocation', 'right');
+legend('$$K_{v}^\bot$$', '$$K_{v}^\parallel$$',...
+    'Interpreter','latex', 'fontsize', fff, 'Location', 'northwest')
+%title('B1)', 'Interpreter','latex', 'fontsize', fff)
+title({'\textbf{B) WM ROI Analysis}'}, 'Interpreter','latex', 'fontsize', fff)
+
+%title('B1)', 'Interpreter','latex', 'fontsize', fff)
+text(9, 3.6, 'B1)', 'Interpreter','latex', 'fontsize', fff)
+
+
+for ri = 1:19
+    deltaKv = RKv_wm_mat(:, ri) - AKv_wm_mat(:, ri);
+    [h,pval,ci,stats] = ttest(deltaKv);
+    pvar(ri) = pval;
+end
+[Q, ~, ~, adj_p] = fdr_bh(pvar(:));
+
+for ri = 1:Nroi
+    y_max = max([RKv_wm_mat(:, ri); AKv_wm_mat(:, ri)]) + 0.1; % Adjust 0.1 as needed for spacing
+    
+    if adj_p(ri) < 0.001
+        sig_marker = '***';
+    elseif adj_p(ri) < 0.01
+        sig_marker = '**';
+    elseif adj_p(ri) < 0.05
+        sig_marker = '*';
+    else
+        sig_marker = '';
+    end
+    
+    if ~isempty(sig_marker)
+        text(ri, y_max, sig_marker, ...
+            'HorizontalAlignment', 'center', ...
+            'VerticalAlignment', 'bottom', ...
+            'FontSize', 8, ...
+            'Interpreter', 'latex', ...
+            'FontWeight', 'bold')
+    end
+end
+
+subplot_tight(5, 2, 4)
+bar((1:Nroi)-xs, RKu_wm_temp, c*x, 'FaceColor',[45 11 117]/255)
+hold on
+bar((1:Nroi)+xs, AKu_wm_temp, c*x, 'FaceColor',[68 154 217]/255)
+plot(sub_mat(:)-xs, RKu_wm_mat(:), '.black')
+plot(sub_mat(:)+xs, AKu_wm_mat(:), '.black')
+xlim([0.5, Nroi+0.5])
+ylim([0 0.6])
+set(gca,'XTick',[],'YTick', 0:0.2:0.6, 'YAxisLocation', 'right');
+legend('$$K_{\mu}^\bot$$', '$$K_{\mu}^\parallel$$',...
+    'Interpreter','latex', 'fontsize', fff, 'Location', 'northwest')
+%title('B2)', 'Interpreter','latex', 'fontsize', fff)
+text(9, 0.54, 'B2)', 'Interpreter','latex', 'fontsize', fff)
+
+
+for ri = 1:19
+    deltaKu = RKu_wm_mat(:, ri) - AKu_wm_mat(:, ri);
+    [h,pval,ci,stats] = ttest(deltaKu);
+    pmic(ri) = pval;
+end
+[Q, ~, ~, adj_p] = fdr_bh(pmic(:));
+
+for ri = 1:Nroi
+    y_max = max([RKu_wm_mat(:, ri); AKu_wm_mat(:, ri)]) + 0.01; % Adjust 0.1 as needed for spacing
+    
+    if adj_p(ri) < 0.001
+        sig_marker = '***';
+    elseif adj_p(ri) < 0.01
+        sig_marker = '**';
+    elseif adj_p(ri) < 0.05
+        sig_marker = '*';
+    else
+        sig_marker = '';
+    end
+    
+    if ~isempty(sig_marker)
+        text(ri, y_max, sig_marker, ...
+            'HorizontalAlignment', 'center', ...
+            'VerticalAlignment', 'bottom', ...
+            'FontSize', 8, ...
+            'Interpreter', 'latex', ...
+            'FontWeight', 'bold')
+    end
+end
+
+
+subplot_tight(5, 2, 6)
+bar((1:Nroi)-xs, RKu_wm_temp./RK_wm_temp, c*x, 'FaceColor',[45 11 117]/255)
+hold on
+bar((1:Nroi)+xs, AKu_wm_temp./AK_wm_temp, c*x, 'FaceColor',[68 154 217]/255)
+plot(sub_mat(:)-xs, RKu_wm_mat(:)./RK_wm_mat(:), '.black')
+plot(sub_mat(:)+xs, AKu_wm_mat(:)./AK_wm_mat(:), '.black')
+xlim([0.5, Nroi+0.5])
+ylim([0, 0.5])
+set(gca,'XTick',[],'YTick',0:0.1:0.5, 'YAxisLocation', 'right');
+%title('$${\mu}W/W$$', 'Interpreter','latex', 'fontsize', fff)
+legend('$$K_{\mu}^\bot/K_t^\bot$$', '$$K_{\mu}^\parallel/K_t^\parallel$$',...
+    'Interpreter','latex', 'fontsize', fff, 'Location', 'northwest')
+%title('B3)', 'Interpreter','latex', 'fontsize', fff)
+text(9, 0.45, 'B3)', 'Interpreter','latex', 'fontsize', fff)
+
+for ri = 1:19
+    deltaKu = RKu_wm_mat(:, ri)./RK_wm_mat(:,ri) - AKu_wm_mat(:, ri)./AK_wm_mat(:,ri);
+    [h,pval,ci,stats] = ttest(deltaKu);
+    pmic(ri) = pval;
+end
+[Q, ~, ~, adj_p] = fdr_bh(pmic(:));
+
+
+for ri = 1:Nroi
+    y_max = max([RKu_wm_mat(:, ri)./RK_wm_mat(:, ri); AKu_wm_mat(:, ri)./AK_wm_mat(:, ri)]) + 0.05; % Adjust 0.1 as needed for spacing
+    
+    if adj_p(ri) < 0.001
+        sig_marker = '***';
+    elseif adj_p(ri) < 0.01
+        sig_marker = '**';
+    elseif adj_p(ri) < 0.05
+        sig_marker = '*';
+    else
+        sig_marker = '';
+    end
+    
+    if ~isempty(sig_marker)
+        text(ri, y_max, sig_marker, ...
+            'HorizontalAlignment', 'center', ...
+            'VerticalAlignment', 'bottom', ...
+            'FontSize', 8, ...
+            'Interpreter', 'latex', ...
+            'FontWeight', 'bold')
+    end
+end
+
+
+subplot_tight(5, 2, 8)
+bar((1:Nroi), OP_wm_temp, 2*c*x, 'FaceColor',[0.6 0.6 0.6])
+hold on
+plot(sub_mat(:), OP_wm_mat(:), '.black')
+xlim([0.5, Nroi+0.5])
+ylim([0, 1])
+set(gca,'XTick',[],'YTick',0:0.2:1, 'YAxisLocation', 'right');
+%title('$${\mu}W/W$$', 'Interpreter','latex', 'fontsize', fff)
+%legend('$$K_{\mu}^\bot/K_t^\bot$$', '$$K_{\mu}^\parallel/K_t^\parallel$$',...
+%    'Interpreter','latex', 'fontsize', fff, 'Location', 'northwest')
+%title('B3)', 'Interpreter','latex', 'fontsize', fff)
+text(9, 0.9, 'B4)', 'Interpreter','latex', 'fontsize', fff)
+
+
+subplot_tight(5, 2, 10)
+axis([0.5 Nroi+0.5 0 1])
+for r = 1:Nroi
+    t = text(r,0,new_names{r},'Rotation',90,'FontSize',10);
+end
+axis off
+
+
+print(fig, 'figure2_final.pdf', '-dpdf', '-painters');
+%print(fig, 'figure2_final.eps', '-depsc', '-painters');
+fprintf('Figures saved successfully!\n');
+
