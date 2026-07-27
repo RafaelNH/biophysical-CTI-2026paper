@@ -221,7 +221,7 @@ for ri = 1:Nroi
 end
 
 
-subplot_tight(5, 2, 6)
+subplot_tight(5, 2, 8)
 bar((1:Nroi)-xs, RKu_wm_temp./RK_wm_temp, c*x, 'FaceColor',[45 11 117]/255)
 hold on
 bar((1:Nroi)+xs, AKu_wm_temp./AK_wm_temp, c*x, 'FaceColor',[68 154 217]/255)
@@ -234,7 +234,7 @@ set(gca,'XTick',[],'YTick',0:0.1:0.5, 'YAxisLocation', 'right');
 legend('$$K_{\mu}^\bot/K_t^\bot$$', '$$K_{\mu}^\parallel/K_t^\parallel$$',...
     'Interpreter','latex', 'fontsize', fff, 'Location', 'northwest')
 %title('B3)', 'Interpreter','latex', 'fontsize', fff)
-text(9, 0.45, 'B3)', 'Interpreter','latex', 'fontsize', fff)
+text(9, 0.45, 'B4)', 'Interpreter','latex', 'fontsize', fff)
 
 for ri = 1:19
     deltaKu = RKu_wm_mat(:, ri)./RK_wm_mat(:,ri) - AKu_wm_mat(:, ri)./AK_wm_mat(:,ri);
@@ -268,7 +268,7 @@ for ri = 1:Nroi
 end
 
 
-subplot_tight(5, 2, 8)
+subplot_tight(5, 2, 6)
 bar((1:Nroi), OP_wm_temp, 2*c*x, 'FaceColor',[0.6 0.6 0.6])
 hold on
 plot(sub_mat(:), OP_wm_mat(:), '.black')
@@ -290,7 +290,7 @@ end
 axis off
 
 
-print(fig, 'figure2_final.pdf', '-dpdf', '-painters');
-%print(fig, 'figure2_final.eps', '-depsc', '-painters');
+print(fig, 'figure3.pdf', '-dpdf', '-painters');
+%print(fig, 'figure3.eps', '-depsc', '-painters');
 fprintf('Figures saved successfully!\n');
 

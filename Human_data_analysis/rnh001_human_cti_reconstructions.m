@@ -12,7 +12,7 @@ load('dirs45.mat')
 Smooth_Gaussian = true;
 const = true;
 
-for whichd = 3
+for whichd = 10
     [path, dwi_name, bval_name, bvec_name, mask_name, datatype] = fun_data_dir(whichd);
     
     % Load data
@@ -43,7 +43,12 @@ for whichd = 3
     bvals = load([path, bval_name]);
     bvecs = load([path, bvec_name]);
     
+    
     gtab = fun_reconst_gtab_for_human(bvals/1000, bvecs, datatype);
+    
+    if whichd == 10
+    save('gtab', 'gtab')
+    end
     
     S0s = data(:, :, :, gtab.bval==0);
     S0 = mean(S0s, 4);
