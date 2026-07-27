@@ -202,6 +202,6 @@ lgd.Position(1) = lgd.Position(1) - 0.045;
 %xlabel('$OP$', 'Interpreter','latex', 'fontsize', fff)
 %text(0.05, 4.5/5*1.1, 'B3', 'fontsize', fff)
 
-print(fig2, 'figure2_final.pdf', '-dpdf', '-painters');
-%print(fig2, 'figure2_final.eps', '-depsc', '-painters');
+print(fig2, 'figure2.pdf', '-dpdf', '-painters');
+%print(fig2, 'figure2.eps', '-depsc', '-painters');
 fprintf('Figures saved successfully!\n');

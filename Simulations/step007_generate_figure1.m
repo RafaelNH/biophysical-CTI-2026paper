@@ -34,8 +34,8 @@ plotFigure1Content(master_fig, fig1_normalized_height_in_master, fig2_normalized
 plotFigure2Content(master_fig, fig2_normalized_height_in_master);
 
 % Export the combined figure
-print(master_fig, 'figure1_final.pdf', '-dpdf', '-painters');
-print(master_fig, 'figure1_final.eps', '-depsc', '-painters');
+print(master_fig, 'figure1.pdf', '-dpdf', '-painters');
+%print(master_fig, 'figure1.eps', '-depsc', '-painters');
 fprintf('Figures saved successfully!\n');
 
 
